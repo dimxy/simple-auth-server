@@ -32,16 +32,48 @@
         <button type="submit">Login</button>
       </form>
     </div>
+    <div class="login">
+      <form method="POST" action="/api/auth" id="loginForm-kc">
+        <h1>Login via Keycloak</h1>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+    <div class="login">
+      <h1>Login via Keycloak (fetch)</h1>
+      <input class="btn" type="submit" value="Login" onclick="callLogin()" />
+    </div>
+    <div class="login">
+      <h1>Login via Keycloak (link)</h1>
+      <input class="btn" type="submit" value="Login" onclick="callLogin2()" />
+    </div>
+    <div class="login">
+      <h1>Logout from API</h1>
+      <input class="btn" type="submit" value="Logout" onclick="callLogout()" />
+    </div>
   </body>
 </html>
 <script>
   function sendVerificationEmail() {
     let email = document.querySelector('#email');
 
-    post('api/invitation', { email: email.value }).then(data => {
+    http_post('api/invitation', { email: email.value }).then(data => {
       alert('Please check your email.');
       email.value = '';
-      console.error(data);
+      console.info(data);
     });
+  }
+  function callLogin() {
+    let uri = `/api/auth?redirect_uri=${window.location.origin}/home.html`;
+    console.info(uri);
+    http_post(uri)
+  }
+  function callLogin2() {
+    let uri = `/api/auth?redirect_uri=${window.location.origin}/home.html`;
+    console.info(uri);
+    window.location.href=uri
+  }
+  function callLogout() {
+    let uri = `/api/auth`;
+    http_delete(uri)
   }
 </script>

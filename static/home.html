@@ -17,7 +17,6 @@
     </div>
     <div class="login"></div>
       <h1>Result:</h1>
-
       <textarea id="resultArea" rows="4" cols="50"></textarea>
     </div>
   </body>
@@ -25,7 +24,7 @@
   function callService() {
     const resultElem = document.getElementById("resultArea");
 
-    call_get('/api/whoami').then(data => {
+    http_get('/api/whoami').then(data => {
       console.info(data);
       resultElem.innerHTML = data;
     });

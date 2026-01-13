@@ -27,12 +27,12 @@ fn create_invitation(
     eml: String,
     pool: web::Data<Pool>,
 ) -> Result<(), crate::errors::ServiceError> {
-    let invitation = dbg!(query(eml, pool)?);
+    let invitation = dbg!(create_invitation_query(eml, pool)?);
     send_invitation(&invitation)
 }
 
 /// Diesel query
-fn query(eml: String, pool: web::Data<Pool>) -> Result<Invitation, crate::errors::ServiceError> {
+fn create_invitation_query(eml: String, pool: web::Data<Pool>) -> Result<Invitation, crate::errors::ServiceError> {
     use crate::schema::invitations::dsl::invitations;
 
     let mut conn = pool.get().unwrap();

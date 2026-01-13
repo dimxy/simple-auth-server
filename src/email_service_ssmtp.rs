@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 
 use crate::{errors::ServiceError, models::Invitation, BIND_PORT};
 
+/// Not used (keycloak registration is used instead)
 /// Send an invitation using the system `ssmtp` binary.
 ///
 /// This implementation builds a minimal RFC-822 message with HTML body
@@ -42,14 +43,14 @@ pub fn send_invitation(invitation: &Invitation) -> Result<(), ServiceError> {
         Ok(c) => c,
         Err(err) => {
             println!("Failed to spawn ssmtp: {err:#?}");
-            return Err(ServiceError::InternalServerError);
+            return Err(ServiceError::InternalServerError("".to_owned()));
         }
     };
 
     if let Some(mut stdin) = child.stdin.take() {
         if let Err(err) = stdin.write_all(message.as_bytes()) {
             println!("Failed to write to ssmtp stdin: {err:#?}");
-            return Err(ServiceError::InternalServerError);
+            return Err(ServiceError::InternalServerError("".to_owned()));
         }
     }
 
@@ -64,12 +65,12 @@ pub fn send_invitation(invitation: &Invitation) -> Result<(), ServiceError> {
                     "ssmtp failed. status={:?} stdout={:?} stderr={:?}",
                     output.status, String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr)
                 );
-                Err(ServiceError::InternalServerError)
+                Err(ServiceError::InternalServerError("".to_owned()))
             }
         }
         Err(err) => {
             println!("Failed to wait for ssmtp: {err:#?}");
-            Err(ServiceError::InternalServerError)
+            Err(ServiceError::InternalServerError("".to_owned()))
         }
     }
 }

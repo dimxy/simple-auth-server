@@ -1,4 +1,5 @@
 use once_cell::sync::Lazy;
+use lazy_static::lazy_static;
 
 use crate::errors::ServiceError;
 
@@ -14,18 +15,30 @@ pub fn hash_password(password: &str) -> Result<String, ServiceError> {
         ..argon2::Config::rfc9106_low_mem()
     };
     argon2::hash_encoded(password.as_bytes(), SALT, &config).map_err(|err| {
-        dbg!(err);
-        ServiceError::InternalServerError
+        dbg!(&err);
+        ServiceError::InternalServerError(err.to_string())
     })
 }
 
-pub fn verify(hash: &str, password: &str) -> Result<bool, ServiceError> {
+pub fn verify_password(hash: &str, password: &str) -> Result<bool, ServiceError> {
     argon2::verify_encoded_ext(hash, password.as_bytes(), SECRET_KEY.as_bytes(), &[]).map_err(
         |err| {
             dbg!(err);
             ServiceError::Unauthorized
         },
     )
+}
+
+#[macro_export]
+macro_rules! get_env {
+    ($name:expr, $message:expr) => {{
+        lazy_static::lazy_static! {
+            static ref ENV_VAR: String = {
+                std::env::var($name).expect($message)
+            };
+        }
+        ENV_VAR.as_str()
+    }};
 }
 
 #[cfg(test)]

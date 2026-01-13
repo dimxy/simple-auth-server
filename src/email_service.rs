@@ -56,12 +56,12 @@ pub fn send_invitation(invitation: &Invitation) -> Result<(), ServiceError> {
             }
             TransmissionResponse::ApiError(errors) => {
                 println!("Response Errors: \n {:#?}", &errors);
-                Err(ServiceError::InternalServerError)
+                Err(ServiceError::InternalServerError("".to_owned()))
             }
         },
         Err(error) => {
             println!("Send Email Error: \n {error:#?}");
-            Err(ServiceError::InternalServerError)
+            Err(ServiceError::InternalServerError("".to_owned()))
         }
     }
 }

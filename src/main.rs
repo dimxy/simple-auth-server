@@ -3,6 +3,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
+use crate::auth_handler::build_oidc_client;
 use actix_identity::IdentityMiddleware;
 use actix_session::{Session, SessionMiddleware, config::PersistentSession, storage::CookieSessionStore};
 use actix_web::{
@@ -13,6 +14,7 @@ use actix_web::{
     },
 };
 use actix_files::Files;
+use actix_cors::Cors;
 use diesel::{prelude::*, r2d2};
 use time::Duration;
 
@@ -31,6 +33,7 @@ mod api_status;
 mod endpoint;
 //mod jwt_utils;
 mod messages;
+mod queries;
 
 const BIND_PORT: u16 = 8080;
 
@@ -69,11 +72,15 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool.");
     let domain: String = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_owned());
 
+    log::info!("Connecting to OIDC");
+    let oidc_client = build_oidc_client().await;
+
     log::info!("starting HTTP server at http://localhost:{BIND_PORT}");
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(oidc_client.clone()))
             .wrap(IdentityMiddleware::default())
             .wrap(
                 SessionMiddleware::builder(
@@ -90,6 +97,7 @@ async fn main() -> std::io::Result<()> {
             )
             // enable logger
             .wrap(middleware::Logger::default())
+            //.wrap(Cors::permissive())
             //.wrap(auth_middleware::CheckLogin)
             //.service(welcome)
             // everything under '/api/' route
@@ -104,10 +112,21 @@ async fn main() -> std::io::Result<()> {
                             .route(web::post().to(register_handler::register_user)),
                     )
                     .service(
-                        web::resource("/auth")
-                            .route(web::post().to(auth_handler::login))
-                            .route(web::delete().to(auth_handler::logout))
-                            .route(web::get().to(auth_handler::get_me)),
+                        web::scope("/auth")
+                            .service(
+                                web::resource("")
+                                    .route(web::post().to(auth_handler::login_via_provider))
+                                    .route(web::get().to(auth_handler::login_via_provider))
+                                    .route(web::delete().to(auth_handler::logout))
+                            )
+                            .service(
+                                web::resource("me")
+                                    .route(web::get().to(auth_handler::get_me)),
+                            )
+                            .service(
+                                web::resource("/callback")
+                                    .route(web::get().to(auth_handler::oidc_callback)),
+                            )
                     )
                     .service(
                         web::resource("/whoami")

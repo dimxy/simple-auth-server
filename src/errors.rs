@@ -5,8 +5,8 @@ use uuid::Error as ParseError;
 
 #[derive(Debug, Display)]
 pub enum ServiceError {
-    #[display("Internal Server Error")]
-    InternalServerError,
+    #[display("Internal Server Error: {_0}")]
+    InternalServerError(String),
 
     #[display("BadRequest: {_0}")]
     BadRequest(String),
@@ -19,8 +19,8 @@ pub enum ServiceError {
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            ServiceError::InternalServerError => {
-                HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
+            ServiceError::InternalServerError(err) => {
+                HttpResponse::InternalServerError().json(format!("Internal Server Error {err}, Please try later"))
             }
             ServiceError::BadRequest(message) => HttpResponse::BadRequest().json(message),
             ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized"),
@@ -46,9 +46,9 @@ impl From<DBError> for ServiceError {
                     let message = info.details().unwrap_or_else(|| info.message()).to_owned();
                     return ServiceError::BadRequest(message);
                 }
-                ServiceError::InternalServerError
+                ServiceError::InternalServerError("".to_owned())
             }
-            _ => ServiceError::InternalServerError,
+            _ => ServiceError::InternalServerError("".to_owned()),
         }
     }
 }

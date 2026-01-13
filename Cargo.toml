@@ -8,6 +8,7 @@ actix-identity = "0.9"
 actix-session = { version = "0.11", features = ["cookie-session"] }
 actix-web = "4.11"
 actix-files = "0.6"
+actix-cors = { version = "0.7" }
 
 chrono = { version = "0.4.30", features = ["serde"] }
 derive_more = { version = "2", features = ["display"] }
@@ -17,7 +18,13 @@ futures-util = "0.3"
 env_logger = "0.11"
 jsonwebtoken = "9.2"
 log = "0.4"
+lazy_static = "*"
 once_cell = "1"
+openidconnect = { git = "https://github.com/devflowinc/openidconnect-rs.git", rev = "9b9cefd91ae7e1bc4ad336a9bed5dcf04fa179a5", features = [
+    "reqwest",
+    "accept-rfc3339-timestamps",
+], default-features = false }
+oauth2 = "4.4.2"
 r2d2 = "0.8"
 rust-argon2 = "2"
 serde_json = "1"

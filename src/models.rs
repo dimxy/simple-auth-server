@@ -16,25 +16,39 @@ use super::schema::*;
 // type alias to use in multiple places
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, Serialize, Deserialize, Selectable, Queryable, Insertable)]
 #[diesel(table_name = users)]
 pub struct User {
     pub email: String,
-    pub hash: String,
+    pub hash: Option<String>,
     pub created_at: NaiveDateTime,
+    pub oidc_subject: Option<String>,
 }
 
 impl User {
-    pub fn from_details<S: Into<String>, T: Into<String>>(email: S, pwd: T) -> Self {
+    pub fn from_details_with_hash<S: Into<String>>(email: S, hash: String) -> Self {
         User {
+            oidc_subject: None,
             email: email.into(),
-            hash: pwd.into(),
-            created_at: chrono::Local::now().naive_local(),
+            hash: Some(hash),
+            created_at: chrono::Utc::now().naive_local(),
+        }
+    }
+
+    pub fn from_details_with_oidc_subject<S: Into<String>, T: Into<String>>(
+        oidc_subject: Option<T>,
+        email: S,
+    ) -> Self {
+        User {
+            oidc_subject: oidc_subject.map(|s| s.into()),
+            email: email.into(),
+            hash: None,
+            created_at: chrono::Utc::now().naive_local(),
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, Serialize, Deserialize, Selectable, Queryable, Insertable)]
 #[diesel(table_name = invitations)]
 pub struct Invitation {
     pub id: Uuid,

@@ -36,6 +36,7 @@ mod messages;
 mod queries;
 
 const BIND_PORT: u16 = 8080;
+const SECOND_IN_DAY: u64 = 24 * 60 * 60; 
 
 /// simple index handler
 #[get("/welcome")]
@@ -81,7 +82,13 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(oidc_client.clone()))
-            .wrap(IdentityMiddleware::default())
+            //.wrap(IdentityMiddleware::default())
+            .wrap(
+                IdentityMiddleware::builder()
+                    .login_deadline(Some(std::time::Duration::from_secs(SECOND_IN_DAY)))
+                    .visit_deadline(Some(std::time::Duration::from_secs(SECOND_IN_DAY)))
+                    .build(),
+            )
             .wrap(
                 SessionMiddleware::builder(
                     CookieSessionStore::default(),
@@ -97,7 +104,7 @@ async fn main() -> std::io::Result<()> {
             )
             // enable logger
             .wrap(middleware::Logger::default())
-            //.wrap(Cors::permissive())
+            .wrap(Cors::permissive())
             //.wrap(auth_middleware::CheckLogin)
             //.service(welcome)
             // everything under '/api/' route
